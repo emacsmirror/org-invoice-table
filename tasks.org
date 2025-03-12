@@ -1,0 +1,15 @@
+* Extra Special Client
+** TODO Fiddle the Dongles
+:LOGBOOK:
+CLOCK: [2025-03-12 Wed 06:02]--[2025-03-12 Wed 08:13] =>  2:11
+:END:
+*** DONE Tweak the Twingles
+CLOSED: [2025-03-12 Wed 08:02]
+:LOGBOOK:
+CLOCK: [2025-03-12 Wed 07:33]--[2025-03-12 Wed 08:03] =>  0:30
+- State "DONE"       from              [2025-03-12 Wed 08:02]
+:END:
+** TODO Nuzzle the Nuzzlins
+:LOGBOOK:
+CLOCK: [2025-03-12 Wed 08:03]--[2025-03-12 Wed 08:15] =>  0:12
+:END:
