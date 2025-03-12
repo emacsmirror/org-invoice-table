@@ -31,7 +31,7 @@ Clone the repository to wherever you'd like to keep it and add it to your emacs 
 
 The formatter autoloads, so you should be able to use `:formatter org-invoice-table` on whichever clock table you want after the package is on the load path.
 
-The intended usage of this table formatter is to have some sort of top-level client, and sub-headings as their billable tasks. Check the [example file](./tasks.md) to get an idea of how to organize tasks.
+The intended usage of this table formatter is to have some sort of top-level client, and sub-headings as their billable tasks. Check the [example file](./tasks.org) to get an idea of how to organize tasks.
 
 See [commands](#org24275cb) for additional functionality.
 
