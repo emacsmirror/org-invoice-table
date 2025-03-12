@@ -7,6 +7,10 @@
 
 A package that provides a custom clocktable formatter for calculating invoice tables.
 
+View this in emacs! Use =M-x eww= and paste in the URL: https://git.sr.ht/~trevdev/org-invoice-table/tree/main/item/org-invoice-table.org
+
+Then, use =M-x org-mode=
+
 ** Contents
 
 #+TOC: headlines 2
