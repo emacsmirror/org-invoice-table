@@ -1,63 +1,60 @@
-# Org Invoice Table
+#+OPTIONS: toc:nil
+
+* Org Invoice Table
+:PROPERTIES:
+:header-args: :tangle org-invoice-table.el
+:END:
 
 A package that provides a custom clocktable formatter for calculating invoice tables.
 
+** Contents
 
-## Contents
+#+TOC: headlines 2
 
-
-# Table of Contents
-
-1.  [Org Invoice Table](#org7f25391)
-    1.  [Contents](#orgfbe3470)
-    2.  [Using This Package](#org1467917)
-    3.  [Package Header](#orgc72f3a0)
-    4.  [Custom Variables](#orgbcee287)
-    5.  [Utility functions](#org87796fe)
-    6.  [Deal with compiler warnings](#org8edc53e)
-    7.  [Table formatter](#orgb0d8d01)
-    8.  [Commands](#org24275cb)
-    9.  [Package footer](#org38254d8)
-    10. [License](#org9515724)
-
-
-## Using This Package
+** Using This Package
+:LOGBOOK:
+CLOCK: [2025-03-12 Wed 05:48]--[2025-03-12 Wed 07:23] =>  1:35
+:END:
 
 Clone the repository to wherever you'd like to keep it and add it to your emacs load path.
 
-```elisp
+#+begin_src elisp :tangle no
 (add-to-list 'load-path "/path/to/org-invoice-table")
-```
+#+end_src
 
-The formatter autoloads, so you should be able to use `:formatter org-invoice-table` on whichever clock table you want after the package is on the load path.
+The formatter autoloads, so you should be able to use ~:formatter org-invoice-table~ on whichever clock table you want after the package is on the load path.
 
-The intended usage of this table formatter is to have some sort of top-level client, and sub-headings as their billable tasks. Check the [example file](./tasks.org) to get an idea of how to organize tasks.
+The intended usage of this table formatter is to have some sort of top-level client, and sub-headings as their billable tasks. Check the [[./tasks.org][example file]] to get an idea of how to organize tasks.
 
-See [commands](#org24275cb) for additional functionality.
+See [[* Commands][commands]] for additional functionality.
 
-
-### Setting A Billable Rate
+*** Setting A Billable Rate
+:LOGBOOK:
+CLOCK: [2025-03-12 Wed 07:48]--[2025-03-12 Wed 09:10] =>  1:22
+:END:
 
 There are two options for setting a billable rate.
 
-1.  Customize the `org-invoice-table-rate` custom variable.
-2.  Set the rate on a table by table basis with the `:rate` property. This overrides the global `org-invoice-table-rate`.
+1. Customize the ~org-invoice-table-rate~ custom variable.
+2. Set the rate on a table by table basis with the ~:rate~ property. This overrides the global ~org-invoice-table-rate~.
 
+*** Example
 
-### Example
-
+#+BEGIN: clocktable :maxlevel 5 :scope ("tasks.org") :formatter org-invoice-table :rate 30
+#+CAPTION: Clock summary at [2025-03-12 Wed 08:07]
 | Task                  | Time  | Billable |
-|--------------------- |----- |-------- |
+|-----------------------+-------+----------|
 | Extra Special Client  | 2.88h | $86.40   |
 | — Fiddle the Dongles  | 2.68h | $80.40   |
 | —— Tweak the Twingles | 0.50h | $15.00   |
 | — Nuzzle the Nuzzlins | 0.20h | $6.00    |
+|-----------------------+-------+----------|
 | Totals                | 2.88h | $86.40   |
+#+END
 
+** Package Header
 
-## Package Header
-
-```elisp
+#+begin_src elisp :comments nil
 ;;; org-invoice-table.el --- Invoicing table formatter for org-mode.
 ;;; -*- lexical-binding: t -*-
 ;;
@@ -100,14 +97,13 @@ There are two options for setting a billable rate.
 ;; property.
 ;;
 ;;; Code:
-```
+#+end_src
 
+** Custom Variables
 
-## Custom Variables
+Set up a custom group for =org-invoice-table= to manage easy customization.
 
-Set up a custom group for `org-invoice-table` to manage easy customization.
-
-```elisp
+#+begin_src elisp
 (require 'seq)
 
 (defgroup org-invoice-table nil
@@ -118,14 +114,13 @@ Set up a custom group for `org-invoice-table` to manage easy customization.
   "The default billable rate for generating the invoice table."
   :type 'integer
   :group 'org-invoice-table)
-```
+#+end_src
 
-
-## Utility functions
+** Utility functions
 
 These functions help with the separation of concerns inside of the table formatter.
 
-```elisp
+#+begin_src elisp
 (defun org-invoice-table-indent (level)
   "Create an indent based on org `LEVEL'."
   (if (= level 1) ""
@@ -186,16 +181,15 @@ Optionally accepts a `RATE' but defaults to `org-invoice-table-rate'."
   (if emph
       (format "*%s*" string)
     string))
-```
+#+end_src
 
+** Deal with compiler warnings
 
-## Deal with compiler warnings
-
-This package depends on `org` in order to function. It is assumed that you would never call its functions without having loaded org-mode first. This assumption leads to a bunch of compiler warnings when you use first use the package.
+This package depends on =org= in order to function. It is assumed that you would never call its functions without having loaded org-mode first. This assumption leads to a bunch of compiler warnings when you use first use the package.
 
 This should nip that in the bud. Functions/variables are declared here in order of appearance.
 
-```elisp
+#+begin_src elisp
 (declare-function org-clock--translate "org-clock.el")
 (declare-function org-time-stamp-format "org.el")
 (declare-function org-clock-special-range "org-clock.el")
@@ -205,14 +199,13 @@ This should nip that in the bud. Functions/variables are declared here in order 
 (declare-function org-table-recalculate "org-table.el")
 (defvar org-duration-format) ; org-duration.el
 (declare-function org-ctrl-c-ctrl-c "org.el")
-```
+#+end_src
 
+** Table formatter
 
-## Table formatter
+This is the function that is meant to be used inside of the =:formatter= keyword of an org clocktable formatter.
 
-This is the function that is meant to be used inside of the `:formatter` keyword of an org clocktable formatter.
-
-```elisp
+#+begin_src elisp
 ;;;###autoload
 (defun org-invoice-table (ipos tables params)
   "Generate an invoicing clocktable with the given `IPOS', `TABLES' and `PARAMS'.
@@ -302,14 +295,13 @@ clocktable works."
     (skip-chars-forward "^|")
     (org-table-align)
     (when has-formula (org-table-recalculate 'all))))
-```
+#+end_src
 
+** Commands
 
-## Commands
+These are functions that are meant to be used with =org-invoice-table= interactively.
 
-These are functions that are meant to be used with `org-invoice-table` interactively.
-
-```elisp
+#+begin_src elisp
 ;;;###autoload
 (defun org-invoice-table-toggle-duration-format ()
   "Toggle the `org-duration-format' from fractional hours to hours/minutes."
@@ -318,25 +310,26 @@ These are functions that are meant to be used with `org-invoice-table` interacti
       (setq-local org-duration-format '(("h" . nil) (special . 2)))
     (setq-local org-duration-format '((special . h:mm))))
   (org-ctrl-c-ctrl-c))
-```
+#+end_src
 
+** Package footer
 
-## Package footer
-
-```elisp
+#+begin_src elisp :comments nil
 (provide 'org-invoice-table)
 
 ;;; org-invoice-table.el ends here
-```
+#+end_src
 
-
-## License
+** License
+:PROPERTIES:
+:header-args: :tangle LICENSE.md
+:END:
 
 This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
-![img](images/gplv3.png)
+[[file:images/gplv3.png]]
 
-```markdown
+#+BEGIN_SRC markdown :tangle LICENSE.md
 ### GNU GENERAL PUBLIC LICENSE
 
 Version 3, 29 June 2007
@@ -1012,4 +1005,7 @@ library, you may consider it more useful to permit linking proprietary
 applications with the library. If this is what you want to do, use the
 GNU Lesser General Public License instead of this License. But first,
 please read <https://www.gnu.org/licenses/why-not-lgpl.html>.
-```
+#+END_SRC
+
+
+
