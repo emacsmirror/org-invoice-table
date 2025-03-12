@@ -11,6 +11,47 @@ A package that provides a custom clocktable formatter for calculating invoice ta
 
 #+TOC: headlines 2
 
+** Using This Package
+:LOGBOOK:
+CLOCK: [2025-03-12 Wed 05:48]--[2025-03-12 Wed 07:23] =>  1:35
+:END:
+
+Clone the repository to wherever you'd like to keep it and add it to your emacs load path.
+
+#+begin_src elisp :tangle no
+(add-to-list 'load-path "/path/to/org-invoice-table")
+#+end_src
+
+The formatter autoloads, so you should be able to use ~:formatter org-invoice-table~ on whichever clock table you want after the package is on the load path.
+
+The intended usage of this table formatter is to have some sort of top-level client, and sub-headings as their billable tasks. Check the [[./tasks.org][example file]] to get an idea of how to organize tasks.
+
+See [[* Commands][commands]] for additional functionality.
+
+*** Setting A Billable Rate
+:LOGBOOK:
+CLOCK: [2025-03-12 Wed 07:48]--[2025-03-12 Wed 09:10] =>  1:22
+:END:
+
+There are two options for setting a billable rate.
+
+1. Customize the ~org-invoice-table-rate~ custom variable.
+2. Set the rate on a table by table basis with the ~:rate~ property. This overrides the global ~org-invoice-table-rate~.
+
+*** Example
+
+#+BEGIN: clocktable :maxlevel 5 :scope ("tasks.org") :formatter org-invoice-table :rate 30
+#+CAPTION: Clock summary at [2025-03-12 Wed 08:07]
+| Task                  | Time  | Billable |
+|-----------------------+-------+----------|
+| Extra Special Client  | 2.88h | $86.40   |
+| — Fiddle the Dongles  | 2.68h | $80.40   |
+| —— Tweak the Twingles | 0.50h | $15.00   |
+| — Nuzzle the Nuzzlins | 0.20h | $6.00    |
+|-----------------------+-------+----------|
+| Totals                | 2.88h | $86.40   |
+#+END
+
 ** Package Header
 
 #+begin_src elisp :comments nil
