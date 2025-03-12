@@ -41,6 +41,8 @@
 ;;
 ;;; Code:
 
+(require 'seq)
+
 (defgroup org-invoice-table nil
   "Customize the org-invoice-table."
   :group 'org-clocktable)
@@ -70,6 +72,37 @@ Optionally accepts a `RATE' but defaults to `org-invoice-table-rate'."
                                 (0))))
          (billable (/ (round (* amount 100)) 100.0)))
     billable))
+
+(defun org-invoice-table-modify-entry (rate)
+  (lambda (entry)
+    (pcase-let ((`(,level ,headline ,tgs ,ts ,time ,props) entry))
+      (list time
+            (org-invoice-table-price time rate)
+            level
+            headline
+            props))))
+
+(defun org-invoice-table-entries-sum (entries)
+  (seq-reduce #'(lambda (acc elm)
+                  (let ((level (caddr elm)))
+                    (if (= level 1)
+                        (+ acc (cadr elm))
+                      acc)))
+              entries 0))
+
+(defun org-invoice-table-update-tables (tables rate)
+  (mapcar #'(lambda (table)
+              (pcase-let ((`(,file-name ,file-time ,entries-in) table))
+                (let ((entries-out
+                       (mapcar (org-invoice-table-modify-entry rate)
+                               entries-in)))
+                  (list file-time
+                        (org-invoice-table-entries-sum entries-out)
+                        entries-out))))
+          (seq-filter #'(lambda (table)
+                          (let ((file-time (cadr table)))
+                            (and file-time (> file-time 0))))
+                      tables)))
 
 (defun org-invoice-emph (string &optional emph)
   "Emphasize a `STRING' if `EMPH' is non-nil."
@@ -106,7 +139,8 @@ clocktable works."
          (has-formula (cond ((and formula (stringp formula))
                              t)
                             (formula (user-error "Invalid :formula param"))))
-         (effort-on (member "Effort" properties)))
+         (effort-on (member "Effort" properties))
+         (billable-tables (org-invoice-table-update-tables tables rate)))
     (goto-char ipos)
 
     (insert-before-markers
@@ -126,35 +160,35 @@ clocktable works."
      "| Task " (if effort-on "| Est" "")
      "| Time | Billable"
      (if comments-on "| Comment" "") "\n")
-    (let '(total-time (apply #'+ (mapcar #'cadr tables)))
+    (let ((total-time (apply #'+ (mapcar #'car billable-tables)))
+          (total-cost (apply #'+ (mapcar #'cadr billable-tables))))
       (when (and total-time (> total-time 0))
-        (pcase-dolist (`(, file-name , file-time , entries) tables)
-          (when (and file-time (> file-time 0))
-            (pcase-dolist (`(,level ,headline ,tgs ,ts ,time ,props) entries)
-              (insert-before-markers
-               (if (= level 1) "|-\n|" "|")
-               (org-invoice-table-indent level)
-               (concat (org-invoice-emph headline (and emph (= level 1))) "|")
-               (if-let (effort (org-invoice-table-get-prop "Effort" props))
+        (pcase-dolist (`(,file-time ,file-cost ,entries) billable-tables)
+          (pcase-dolist (`(,time ,cost ,level ,headline ,props) entries)
+            (insert-before-markers
+             (if (= level 1) "|-\n|" "|")
+             (org-invoice-table-indent level)
+             (concat (org-invoice-emph headline (and emph (= level 1))) "|")
+             (if-let (effort (org-invoice-table-get-prop "Effort" props))
                  (concat (org-invoice-emph
                           (org-duration-from-minutes
                            (org-duration-to-minutes effort))
                           (and emph (= level 1)))
                          "|")
-                 "")
-               (concat (org-invoice-emph
-                        (org-duration-from-minutes time)
-                        (and emph (= level 1)))
-                       "|")
-               (concat (org-invoice-emph
-                        (format "$%.2f" (org-invoice-table-price time rate))
-                        (and emph (= level 1)))
-                       "|")
-               (if-let* (comments-on
-                         (comment
-                          (org-invoice-table-get-prop "Comment" props)))
-                   (concat comment "\n")
-                 "\n")))))
+               "")
+             (concat (org-invoice-emph
+                      (org-duration-from-minutes time)
+                      (and emph (= level 1)))
+                     "|")
+             (concat (org-invoice-emph
+                      (format "$%.2f" cost)
+                      (and emph (= level 1)))
+                     "|")
+             (if-let* (comments-on
+                       (comment
+                        (org-invoice-table-get-prop "Comment" props)))
+                 (concat comment "\n")
+               "\n"))))
         (let ((cols-adjust
                (if (member "Effort" properties)
                    2
@@ -167,7 +201,7 @@ clocktable works."
                     (format "%s" (org-duration-from-minutes total-time)) emph)
                    "|")
            (concat (org-invoice-emph
-                    (format "$%.2f" (org-invoice-table-price total-time rate))
+                    (format "$%.2f" total-cost)
                     emph) "|" ))
           (when has-formula
             (insert "\n#+TBLFM: " formula)))))
