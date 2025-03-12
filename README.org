@@ -8,8 +8,21 @@
 A package that provides a custom clocktable formatter for calculating invoice tables.
 
 ** Contents
-
-#+TOC: headlines 2
+:PROPERTIES:
+:TOC:      :include all :depth 3 :force (depth) :ignore (this) :local (depth)
+:END:
+:CONTENTS:
+- [[#org-invoice-table][Org Invoice Table]]
+  - [[#using-this-package][Using This Package]]
+  - [[#package-header][Package Header]]
+  - [[#custom-variables][Custom Variables]]
+  - [[#utility-functions][Utility functions]]
+  - [[#deal-with-compiler-warnings][Deal with compiler warnings]]
+  - [[#table-formatter][Table formatter]]
+  - [[#commands][Commands]]
+  - [[#package-footer][Package footer]]
+  - [[#license][License]]
+:END:
 
 ** Using This Package
 :LOGBOOK:
