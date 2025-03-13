@@ -12,17 +12,17 @@ Then, use `M-x org-mode`
 
 # Table of Contents
 
-1.  [Org Invoice Table](#org585b063)
-    1.  [Contents](#org5070602)
-    2.  [Using This Package](#org9b39dc4)
-    3.  [Package Header](#org27df217)
-    4.  [Custom Variables](#org14d90f7)
-    5.  [Utility functions](#org3201ba4)
-    6.  [Deal with compiler warnings](#orgbbcbb06)
-    7.  [Table formatter](#org225559b)
-    8.  [Commands](#org0d224de)
-    9.  [Package footer](#org2341235)
-    10. [License](#orga5b0c83)
+1.  [Org Invoice Table](#org916ea60)
+    1.  [Contents](#org4b5db3a)
+    2.  [Using This Package](#orgab85dcf)
+    3.  [Package Header](#org6ac6da9)
+    4.  [Custom Variables](#orga5ab5bb)
+    5.  [Utility functions](#orgbbdbda7)
+    6.  [Deal with compiler warnings](#org61527d1)
+    7.  [Table formatter](#orge526481)
+    8.  [Commands](#orga2601e4)
+    9.  [Package footer](#org4173320)
+    10. [License](#orgd6185b0)
 
 
 ## Using This Package
@@ -37,7 +37,7 @@ The formatter autoloads, so you should be able to use `:formatter org-invoice-ta
 
 The intended usage of this table formatter is to have some sort of top-level client, and sub-headings as their billable tasks. Check the [example file](./tasks.org) to get an idea of how to organize tasks.
 
-See [commands](#org0d224de) for additional functionality.
+See [commands](#orga2601e4) for additional functionality.
 
 
 ### Setting A Billable Rate
@@ -62,18 +62,17 @@ There are two options for setting a billable rate.
 ## Package Header
 
 ```elisp
-;;; org-invoice-table.el --- Invoicing table formatter for org-mode.
-;;; -*- lexical-binding: t -*-
+;;; org-invoice-table.el --- Invoicing table formatter for org-mode -*- lexical-binding: td -*-
 ;;
 ;; Copyright (C) 2022 Trevor Richards
 ;;
 ;; Author: Trevor Richards <trev@trevdev.ca>
 ;; Maintainer: Trevor Richards <trev@trevdev.ca>
 ;; URL: https://git.sr.ht/~trevdev/org-invoice-table
-;; Created: 7nd September, 2022
-;; Version: 0.1.0
+;; Created: 7th September, 2022
+;; Version: 1.0.0
 ;; License: GPL3
-;; Package-Requires: (org)
+;; Package-Requires: ((emacs "26.1"))
 ;;
 ;; This file is not a part of GNU Emacs.
 ;;
@@ -115,7 +114,7 @@ Set up a custom group for `org-invoice-table` to manage easy customization.
 (require 'seq)
 
 (defgroup org-invoice-table nil
-  "Customize the org-invoice-table."
+  "Customize the 'org-invoice-table'."
   :group 'org-clocktable)
 
 (defcustom org-invoice-table-rate 80
@@ -152,7 +151,7 @@ Optionally accepts a `RATE' but defaults to `org-invoice-table-rate'."
     billable))
 
 (defun org-invoice-table-modify-entry (rate)
-  "Get a mapper that uses a `RATE' to create a billable entry."
+  "Get a mapper that leverages a `RATE' to create a billable entry."
   (lambda (entry)
     (pcase-let ((`(,level ,headline ,tgs ,ts ,time ,props) entry))
       (list time
@@ -171,7 +170,7 @@ Optionally accepts a `RATE' but defaults to `org-invoice-table-rate'."
               entries 0))
 
 (defun org-invoice-table-update-tables (tables rate)
-  "Converts clock`TABLES' into billable tables with a given `RATE'."
+  "Convert clock`TABLES' into billable tables with a given `RATE'."
   (mapcar #'(lambda (table)
               (pcase-let ((`(,file-name ,file-time ,entries-in) table))
                 (let ((entries-out
@@ -185,7 +184,7 @@ Optionally accepts a `RATE' but defaults to `org-invoice-table-rate'."
                             (and file-time (> file-time 0))))
                       tables)))
 
-(defun org-invoice-emph (string &optional emph)
+(defun org-invoice-table-emph (string &optional emph)
   "Emphasize a `STRING' if `EMPH' is non-nil."
   (if emph
       (format "*%s*" string)
@@ -265,19 +264,19 @@ clocktable works."
             (insert-before-markers
              (if (= level 1) "|-\n|" "|")
              (org-invoice-table-indent level)
-             (concat (org-invoice-emph headline (and emph (= level 1))) "|")
+             (concat (org-invoice-table-emph headline (and emph (= level 1))) "|")
              (if-let (effort (org-invoice-table-get-prop "Effort" props))
-                 (concat (org-invoice-emph
+                 (concat (org-invoice-table-emph
                           (org-duration-from-minutes
                            (org-duration-to-minutes effort))
                           (and emph (= level 1)))
                          "|")
                "")
-             (concat (org-invoice-emph
+             (concat (org-invoice-table-emph
                       (org-duration-from-minutes time)
                       (and emph (= level 1)))
                      "|")
-             (concat (org-invoice-emph
+             (concat (org-invoice-table-emph
                       (format "$%.2f" cost)
                       (and emph (= level 1)))
                      "|")
@@ -292,12 +291,12 @@ clocktable works."
                  1)))
           (insert-before-markers
            (concat "|-\n| "
-                   (org-invoice-emph "Totals" emph)
+                   (org-invoice-table-emph "Totals" emph)
                    (make-string cols-adjust ?|))
-           (concat (org-invoice-emph
+           (concat (org-invoice-table-emph
                     (format "%s" (org-duration-from-minutes total-time)) emph)
                    "|")
-           (concat (org-invoice-emph
+           (concat (org-invoice-table-emph
                     (format "$%.2f" total-cost)
                     emph) "|" ))
           (when has-formula

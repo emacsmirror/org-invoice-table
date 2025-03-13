@@ -1,15 +1,14 @@
-;;; org-invoice-table.el --- Invoicing table formatter for org-mode.
-;;; -*- lexical-binding: t -*-
+;;; org-invoice-table.el --- Invoicing table formatter for org-mode -*- lexical-binding: td -*-
 ;;
 ;; Copyright (C) 2022 Trevor Richards
 ;;
 ;; Author: Trevor Richards <trev@trevdev.ca>
 ;; Maintainer: Trevor Richards <trev@trevdev.ca>
 ;; URL: https://git.sr.ht/~trevdev/org-invoice-table
-;; Created: 7nd September, 2022
-;; Version: 0.1.0
+;; Created: 7th September, 2022
+;; Version: 1.0.0
 ;; License: GPL3
-;; Package-Requires: (org)
+;; Package-Requires: ((emacs "26.1"))
 ;;
 ;; This file is not a part of GNU Emacs.
 ;;
@@ -44,7 +43,7 @@
 (require 'seq)
 
 (defgroup org-invoice-table nil
-  "Customize the org-invoice-table."
+  "Customize the 'org-invoice-table'."
   :group 'org-clocktable)
 
 (defcustom org-invoice-table-rate 80
@@ -74,6 +73,7 @@ Optionally accepts a `RATE' but defaults to `org-invoice-table-rate'."
     billable))
 
 (defun org-invoice-table-modify-entry (rate)
+  "Get a mapper that leverages a `RATE' to create a billable entry."
   (lambda (entry)
     (pcase-let ((`(,level ,headline ,tgs ,ts ,time ,props) entry))
       (list time
@@ -83,6 +83,7 @@ Optionally accepts a `RATE' but defaults to `org-invoice-table-rate'."
             props))))
 
 (defun org-invoice-table-entries-sum (entries)
+  "Get the sum of all billable table `ENTRIES'."
   (seq-reduce #'(lambda (acc elm)
                   (let ((level (caddr elm)))
                     (if (= level 1)
@@ -91,6 +92,7 @@ Optionally accepts a `RATE' but defaults to `org-invoice-table-rate'."
               entries 0))
 
 (defun org-invoice-table-update-tables (tables rate)
+  "Convert clock`TABLES' into billable tables with a given `RATE'."
   (mapcar #'(lambda (table)
               (pcase-let ((`(,file-name ,file-time ,entries-in) table))
                 (let ((entries-out
@@ -104,7 +106,7 @@ Optionally accepts a `RATE' but defaults to `org-invoice-table-rate'."
                             (and file-time (> file-time 0))))
                       tables)))
 
-(defun org-invoice-emph (string &optional emph)
+(defun org-invoice-table-emph (string &optional emph)
   "Emphasize a `STRING' if `EMPH' is non-nil."
   (if emph
       (format "*%s*" string)
@@ -168,19 +170,19 @@ clocktable works."
             (insert-before-markers
              (if (= level 1) "|-\n|" "|")
              (org-invoice-table-indent level)
-             (concat (org-invoice-emph headline (and emph (= level 1))) "|")
+             (concat (org-invoice-table-emph headline (and emph (= level 1))) "|")
              (if-let (effort (org-invoice-table-get-prop "Effort" props))
-                 (concat (org-invoice-emph
+                 (concat (org-invoice-table-emph
                           (org-duration-from-minutes
                            (org-duration-to-minutes effort))
                           (and emph (= level 1)))
                          "|")
                "")
-             (concat (org-invoice-emph
+             (concat (org-invoice-table-emph
                       (org-duration-from-minutes time)
                       (and emph (= level 1)))
                      "|")
-             (concat (org-invoice-emph
+             (concat (org-invoice-table-emph
                       (format "$%.2f" cost)
                       (and emph (= level 1)))
                      "|")
@@ -195,12 +197,12 @@ clocktable works."
                  1)))
           (insert-before-markers
            (concat "|-\n| "
-                   (org-invoice-emph "Totals" emph)
+                   (org-invoice-table-emph "Totals" emph)
                    (make-string cols-adjust ?|))
-           (concat (org-invoice-emph
+           (concat (org-invoice-table-emph
                     (format "%s" (org-duration-from-minutes total-time)) emph)
                    "|")
-           (concat (org-invoice-emph
+           (concat (org-invoice-table-emph
                     (format "$%.2f" total-cost)
                     emph) "|" ))
           (when has-formula
