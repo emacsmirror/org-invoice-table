@@ -18,9 +18,6 @@ Also, this document is also the package ;)
 #+TOC: headlines 2
 
 ** Using This Package
-:LOGBOOK:
-CLOCK: [2025-03-12 Wed 05:48]--[2025-03-12 Wed 07:23] =>  1:35
-:END:
 
 Clone the repository to wherever you'd like to keep it and add it to your emacs load path.
 
@@ -35,10 +32,6 @@ The intended usage of this table formatter is to have some sort of top-level cli
 See [[* Commands][commands]] for additional functionality.
 
 *** Setting A Billable Rate
-:LOGBOOK:
-CLOCK: [2025-03-12 Wed 07:48]--[2025-03-12 Wed 09:10] =>  1:22
-:END:
-
 There are two options for setting a billable rate.
 
 1. Customize the ~org-invoice-table-rate~ custom variable.
@@ -61,7 +54,7 @@ There are two options for setting a billable rate.
 ** Package Header
 
 #+begin_src elisp :comments nil
-;;; org-invoice-table.el --- Invoicing table formatter for org-mode -*- lexical-binding: td -*-
+;;; org-invoice-table.el --- Invoicing table formatter for org-mode -*- lexical-binding: t -*-
 ;;
 ;; Copyright (C) 2022 Trevor Richards
 ;;
@@ -159,26 +152,26 @@ Optionally accepts a `RATE' but defaults to `org-invoice-table-rate'."
 
 (defun org-invoice-table-entries-sum (entries)
   "Get the sum of all billable table `ENTRIES'."
-  (seq-reduce #'(lambda (acc elm)
-                  (let ((level (caddr elm)))
-                    (if (= level 1)
-                        (+ acc (cadr elm))
-                      acc)))
+  (seq-reduce (lambda (acc elm)
+                (let ((level (caddr elm)))
+                  (if (= level 1)
+                      (+ acc (cadr elm))
+                    acc)))
               entries 0))
 
 (defun org-invoice-table-update-tables (tables rate)
   "Convert clock`TABLES' into billable tables with a given `RATE'."
-  (mapcar #'(lambda (table)
-              (pcase-let ((`(,file-name ,file-time ,entries-in) table))
-                (let ((entries-out
-                       (mapcar (org-invoice-table-modify-entry rate)
-                               entries-in)))
-                  (list file-time
-                        (org-invoice-table-entries-sum entries-out)
-                        entries-out))))
-          (seq-filter #'(lambda (table)
-                          (let ((file-time (cadr table)))
-                            (and file-time (> file-time 0))))
+  (mapcar (lambda (table)
+            (pcase-let ((`(,file-name ,file-time ,entries-in) table))
+              (let ((entries-out
+                     (mapcar (org-invoice-table-modify-entry rate)
+                             entries-in)))
+                (list file-time
+                      (org-invoice-table-entries-sum entries-out)
+                      entries-out))))
+          (seq-filter (lambda (table)
+                        (let ((file-time (cadr table)))
+                          (and file-time (> file-time 0))))
                       tables)))
 
 (defun org-invoice-table-emph (string &optional emph)

@@ -1,4 +1,4 @@
-;;; org-invoice-table.el --- Invoicing table formatter for org-mode -*- lexical-binding: td -*-
+;;; org-invoice-table.el --- Invoicing table formatter for org-mode -*- lexical-binding: t -*-
 ;;
 ;; Copyright (C) 2022 Trevor Richards
 ;;
@@ -84,26 +84,26 @@ Optionally accepts a `RATE' but defaults to `org-invoice-table-rate'."
 
 (defun org-invoice-table-entries-sum (entries)
   "Get the sum of all billable table `ENTRIES'."
-  (seq-reduce #'(lambda (acc elm)
-                  (let ((level (caddr elm)))
-                    (if (= level 1)
-                        (+ acc (cadr elm))
-                      acc)))
+  (seq-reduce (lambda (acc elm)
+                (let ((level (caddr elm)))
+                  (if (= level 1)
+                      (+ acc (cadr elm))
+                    acc)))
               entries 0))
 
 (defun org-invoice-table-update-tables (tables rate)
   "Convert clock`TABLES' into billable tables with a given `RATE'."
-  (mapcar #'(lambda (table)
-              (pcase-let ((`(,file-name ,file-time ,entries-in) table))
-                (let ((entries-out
-                       (mapcar (org-invoice-table-modify-entry rate)
-                               entries-in)))
-                  (list file-time
-                        (org-invoice-table-entries-sum entries-out)
-                        entries-out))))
-          (seq-filter #'(lambda (table)
-                          (let ((file-time (cadr table)))
-                            (and file-time (> file-time 0))))
+  (mapcar (lambda (table)
+            (pcase-let ((`(,file-name ,file-time ,entries-in) table))
+              (let ((entries-out
+                     (mapcar (org-invoice-table-modify-entry rate)
+                             entries-in)))
+                (list file-time
+                      (org-invoice-table-entries-sum entries-out)
+                      entries-out))))
+          (seq-filter (lambda (table)
+                        (let ((file-time (cadr table)))
+                          (and file-time (> file-time 0))))
                       tables)))
 
 (defun org-invoice-table-emph (string &optional emph)
