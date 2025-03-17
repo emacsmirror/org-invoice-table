@@ -6,7 +6,7 @@
 ;; Maintainer: Trevor Richards <trev@trevdev.ca>
 ;; URL: https://codeberg.org/trevdev/org-invoice-table
 ;; Created: 7th September, 2022
-;; Version: 1.0.0
+;; Version: 1.0.1
 ;; License: GPL3
 ;; Package-Requires: ((emacs "26.1"))
 ;;
