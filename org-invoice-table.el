@@ -4,7 +4,7 @@
 ;;
 ;; Author: Trevor Richards <trev@trevdev.ca>
 ;; Maintainer: Trevor Richards <trev@trevdev.ca>
-;; URL: https://git.sr.ht/~trevdev/org-invoice-table
+;; URL: https://codeberg.org/trevdev/org-invoice-table
 ;; Created: 7th September, 2022
 ;; Version: 1.0.0
 ;; License: GPL3
