@@ -143,7 +143,7 @@ Optionally accepts a `RATE' but defaults to `org-invoice-table-rate'."
 (defun org-invoice-table-modify-entry (rate)
   "Get a mapper that leverages a `RATE' to create a billable entry."
   (lambda (entry)
-    (pcase-let ((`(,level ,headline ,tgs ,ts ,time ,props) entry))
+    (pcase-let ((`(,level ,headline ,_tgs ,_ts ,time ,props) entry))
       (list time
             (org-invoice-table-price time rate)
             level
@@ -162,7 +162,7 @@ Optionally accepts a `RATE' but defaults to `org-invoice-table-rate'."
 (defun org-invoice-table-update-tables (tables rate)
   "Convert clock`TABLES' into billable tables with a given `RATE'."
   (mapcar (lambda (table)
-            (pcase-let ((`(,file-name ,file-time ,entries-in) table))
+            (pcase-let ((`(,_file-name ,file-time ,entries-in) table))
               (let ((entries-out
                      (mapcar (org-invoice-table-modify-entry rate)
                              entries-in)))
@@ -247,7 +247,7 @@ clocktable works."
     (let ((total-time (apply #'+ (mapcar #'car billable-tables)))
           (total-cost (apply #'+ (mapcar #'cadr billable-tables))))
       (when (and total-time (> total-time 0))
-        (pcase-dolist (`(,file-time ,file-cost ,entries) billable-tables)
+        (pcase-dolist (`(,_file-time ,_file-cost ,entries) billable-tables)
           (pcase-dolist (`(,time ,cost ,level ,headline ,props) entries)
             (insert-before-markers
              (if (= level 1) "|-\n|" "|")
