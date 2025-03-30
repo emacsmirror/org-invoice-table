@@ -52,17 +52,17 @@
   :group 'org-invoice-table)
 
 (defun org-invoice-table-indent (level)
-  "Create an indent based on org `LEVEL'."
+  "Create an indent based on org LEVEL."
   (if (= level 1) ""
     (concat (make-string (1- level) ?—) " ")))
 
 (defun org-invoice-table-get-prop (key props)
-  "Retrieve the assoc value of some `PROPS' using a `KEY'."
+  "Retrieve the assoc value of some PROPS using a KEY."
   (cdr (assoc key props)))
 
 (defun org-invoice-table-price (minutes &optional rate)
-  "Get the cost of `MINUTES' spent on a project.
-Optionally accepts a `RATE' but defaults to `org-invoice-table-rate'."
+  "Get the cost of MINUTES spent on a project.
+Optionally accepts a RATE but defaults to `org-invoice-table-rate'."
   (let* ((hours (/ (round (* (/ minutes 60.0) 100)) 100.0))
          (amount (* hours (cond ((numberp rate) rate)
                                 ((numberp org-invoice-table-rate)
@@ -73,7 +73,7 @@ Optionally accepts a `RATE' but defaults to `org-invoice-table-rate'."
     billable))
 
 (defun org-invoice-table-modify-entry (rate)
-  "Get a mapper that leverages a `RATE' to create a billable entry."
+  "Get a mapper that leverages a RATE to create a billable entry."
   (lambda (entry)
     (pcase-let ((`(,level ,headline ,_tgs ,_ts ,time ,props) entry))
       (list time
@@ -83,7 +83,7 @@ Optionally accepts a `RATE' but defaults to `org-invoice-table-rate'."
             props))))
 
 (defun org-invoice-table-entries-sum (entries)
-  "Get the sum of all billable table `ENTRIES'."
+  "Get the sum of all billable table ENTRIES."
   (seq-reduce (lambda (acc elm)
                 (let ((level (caddr elm)))
                   (if (= level 1)
@@ -92,7 +92,7 @@ Optionally accepts a `RATE' but defaults to `org-invoice-table-rate'."
               entries 0))
 
 (defun org-invoice-table-update-tables (tables rate)
-  "Convert clock`TABLES' into billable tables with a given `RATE'."
+  "Convert clock TABLES into billable tables with a given RATE."
   (mapcar (lambda (table)
             (pcase-let ((`(,_file-name ,file-time ,entries-in) table))
               (let ((entries-out
@@ -107,7 +107,7 @@ Optionally accepts a `RATE' but defaults to `org-invoice-table-rate'."
                       tables)))
 
 (defun org-invoice-table-emph (string &optional emph)
-  "Emphasize a `STRING' if `EMPH' is non-nil."
+  "Emphasize a STRING if EMPH is non-nil."
   (if emph
       (format "*%s*" string)
     string))
@@ -124,9 +124,9 @@ Optionally accepts a `RATE' but defaults to `org-invoice-table-rate'."
 
 ;;;###autoload
 (defun org-invoice-table (ipos tables params)
-  "Generate an invoicing clocktable with the given `IPOS', `TABLES' and `PARAMS'.
-The `IPOS' is the point position. `TABLES' should be a list of table data.
-The `PARAMS' should be a property list of table keywords and values.
+  "Generate an invoicing clocktable with the given IPOS, TABLES and PARAMS.
+The IPOS is the point position. TABLES should be a list of table data.
+The PARAMS should be a property list of table keywords and values.
 
 See `org-clocktable-write-default' if you want an example of how the standard
 clocktable works."
