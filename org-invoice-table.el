@@ -41,14 +41,29 @@
 ;;; Code:
 
 (require 'seq)
+(require 'calc-misc)
 
 (defgroup org-invoice-table nil
   "Customize the 'org-invoice-table'."
   :group 'org-clocktable)
 
-(defcustom org-invoice-table-rate 80
+(defcustom org-invoice-table-rate 80.0
   "The default billable rate for generating the invoice table."
+  :type 'float
+  :group 'org-invoice-table)
+
+(defcustom org-invoice-table-hourly-accuracy 3
+  "The accuracy of the time spent on tasks in fractional hours.
+For example, when `org-invoice-table-hourly-accuracy' is set to 3, and
+a billable task ran for 95 minutes, the hourly time is set to 1.583."
   :type 'integer
+  :group 'org-invoice-table)
+
+(defcustom org-invoice-table-time-display 'hours
+  "The display format for the time column.
+It can be either billable `hours' or `time'."
+  :type '(radio (const :tag "Billable Hours" hours)
+                (const :tag "Clock Time" time))
   :group 'org-invoice-table)
 
 (defun org-invoice-table-indent (level)
@@ -60,51 +75,61 @@
   "Retrieve the assoc value of some PROPS using a KEY."
   (cdr (assoc key props)))
 
-(defun org-invoice-table-price (minutes &optional rate)
-  "Get the cost of MINUTES spent on a project.
+(defun org-invoice-table-price (hours &optional rate)
+  "Get the cost of HOURS spent on a project.
 Optionally accepts a RATE but defaults to `org-invoice-table-rate'."
-  (let* ((hours (/ (round (* (/ minutes 60.0) 100)) 100.0))
+  (let* ((mult (math-pow 10 org-invoice-table-hourly-accuracy))
          (amount (* hours (cond ((numberp rate) rate)
                                 ((numberp org-invoice-table-rate)
                                  org-invoice-table-rate)
-
                                 (0))))
-         (billable (/ (round (* amount 100)) 100.0)))
+         (billable (/ (floor (* amount mult)) (float mult))))
     billable))
+
+(defun org-invoice-table-hours (minutes)
+  "Convert MINUTES into billable hours."
+  (let ((mult (math-pow 10 org-invoice-table-hourly-accuracy)))
+    (/ (round (* (/ minutes 60.0) mult)) (float mult))))
+
+(defun org-invoice-table-format-hours (hours)
+  "Convert a float HOURS value into a string."
+  (format (concat "%." (format "%d" org-invoice-table-hourly-accuracy) "f")
+          hours))
 
 (defun org-invoice-table-modify-entry (rate)
   "Get a mapper that leverages a RATE to create a billable entry."
   (lambda (entry)
-    (pcase-let ((`(,level ,headline ,_tgs ,_ts ,time ,props) entry))
-      (list time
-            (org-invoice-table-price time rate)
-            level
-            headline
-            props))))
-
-(defun org-invoice-table-entries-sum (entries)
-  "Get the sum of all billable table ENTRIES."
-  (seq-reduce (lambda (acc elm)
-                (let ((level (caddr elm)))
-                  (if (= level 1)
-                      (+ acc (cadr elm))
-                    acc)))
-              entries 0))
+    (pcase-let ((`(,level ,headline ,_tgs ,_ts ,minutes ,props) entry))
+      (let ((billable-hours (org-invoice-table-hours minutes)))
+        (list minutes
+              billable-hours
+              (org-invoice-table-price billable-hours rate)
+              level
+              headline
+              props)))))
 
 (defun org-invoice-table-update-tables (tables rate)
   "Convert clock TABLES into billable tables with a given RATE."
   (mapcar (lambda (table)
-            (pcase-let ((`(,_file-name ,file-time ,entries-in) table))
+            (pcase-let ((`(,_file-name ,file-mins ,entries-in) table))
               (let ((entries-out
                      (mapcar (org-invoice-table-modify-entry rate)
-                             entries-in)))
-                (list file-time
-                      (org-invoice-table-entries-sum entries-out)
+                             entries-in))
+                    (file-hours (org-invoice-table-hours file-mins)))
+                (list file-mins
+                      file-hours
+                      (org-invoice-table-price file-hours rate)
                       entries-out))))
           (seq-filter (lambda (table)
                         (let ((file-time (cadr table)))
                           (and file-time (> file-time 0))))
                       tables)))
+
+(defun org-invoice-table-display-time (mins hours)
+  "Display time with MINS or billable HOURS."
+  (if (eq org-invoice-table-time-display 'hours)
+      (org-invoice-table-format-hours hours)
+    (org-duration-from-minutes mins)))
 
 (defun org-invoice-table-emph (string &optional emph)
   "Emphasize a STRING if EMPH is non-nil."
@@ -142,7 +167,8 @@ clocktable works."
                              t)
                             (formula (user-error "Invalid :formula param"))))
          (effort-on (member "Effort" properties))
-         (billable-tables (org-invoice-table-update-tables tables rate)))
+         (billable-tables (org-invoice-table-update-tables tables rate))
+         (org-duration-format `((special . h:mm))))
     (goto-char ipos)
 
     (insert-before-markers
@@ -162,11 +188,13 @@ clocktable works."
      "| Task " (if effort-on "| Est" "")
      "| Time | Billable"
      (if comments-on "| Comment" "") "\n")
-    (let ((total-time (apply #'+ (mapcar #'car billable-tables)))
-          (total-cost (apply #'+ (mapcar #'cadr billable-tables))))
-      (when (and total-time (> total-time 0))
-        (pcase-dolist (`(,_file-time ,_file-cost ,entries) billable-tables)
-          (pcase-dolist (`(,time ,cost ,level ,headline ,props) entries)
+    (let ((total-mins (apply #'+ (mapcar #'car billable-tables)))
+          (total-hours (apply #'+ (mapcar #'cadr billable-tables)))
+          (total-cost (apply #'+ (mapcar #'caddr billable-tables))))
+      (when (and total-mins (> total-mins 0))
+        (pcase-dolist (`(,_file-mins ,_file-hours ,_file-cost ,entries)
+                       billable-tables)
+          (pcase-dolist (`(,mins ,hours ,cost ,level ,headline ,props) entries)
             (insert-before-markers
              (if (= level 1) "|-\n|" "|")
              (org-invoice-table-indent level)
@@ -179,7 +207,7 @@ clocktable works."
                          "|")
                "")
              (concat (org-invoice-table-emph
-                      (org-duration-from-minutes time)
+                      (org-invoice-table-display-time mins hours)
                       (and emph (= level 1)))
                      "|")
              (concat (org-invoice-table-emph
@@ -200,7 +228,8 @@ clocktable works."
                    (org-invoice-table-emph "Totals" emph)
                    (make-string cols-adjust ?|))
            (concat (org-invoice-table-emph
-                    (format "%s" (org-duration-from-minutes total-time)) emph)
+                    (org-invoice-table-display-time total-mins total-hours)
+                    emph)
                    "|")
            (concat (org-invoice-table-emph
                     (format "$%.2f" total-cost)
@@ -216,9 +245,9 @@ clocktable works."
 (defun org-invoice-table-toggle-duration-format ()
   "Toggle the `org-duration-format' from fractional hours to hours/minutes."
   (interactive)
-  (if (equal org-duration-format '((special . h:mm)))
-      (setq-local org-duration-format '(("h" . nil) (special . 2)))
-    (setq-local org-duration-format '((special . h:mm))))
+  (if (eq org-invoice-table-time-display 'hours)
+      (setq-local org-invoice-table-time-display 'time)
+    (setq-local org-invoice-table-time-display 'hours))
   (org-ctrl-c-ctrl-c))
 
 (provide 'org-invoice-table)
