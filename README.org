@@ -5,7 +5,8 @@
 :header-args: :tangle org-invoice-table.el
 :END:
 
-[[https://melpa.org/#/org-invoice-table][file:https://melpa.org/packages/org-invoice-table-badge.svg]]
+#+ATTR_HTML: :alt "Melpa build version"
+[[https://melpa.org/packages/org-invoice-table-badge.svg]]
 
 A package that provides a custom clocktable formatter for calculating invoice tables.
 
@@ -1046,6 +1047,3 @@ applications with the library. If this is what you want to do, use the
 GNU Lesser General Public License instead of this License. But first,
 please read <https://www.gnu.org/licenses/why-not-lgpl.html>.
 #+END_SRC
-
-
-
