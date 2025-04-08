@@ -6,7 +6,7 @@
 ;; Maintainer: Trevor Richards <trev@trevdev.ca>
 ;; URL: https://codeberg.org/trevdev/org-invoice-table
 ;; Created: 7th September, 2022
-;; Version: 1.1.0
+;; Version: 1.1.1
 ;; License: GPL3
 ;; Package-Requires: ((emacs "26.1"))
 ;;
@@ -83,7 +83,7 @@ Optionally accepts a RATE but defaults to `org-invoice-table-rate'."
                                 ((numberp org-invoice-table-rate)
                                  org-invoice-table-rate)
                                 (0))))
-         (billable (/ (floor (* amount mult)) (float mult))))
+         (billable (/ (round (* amount mult)) (float mult))))
     billable))
 
 (defun org-invoice-table-hours (minutes)
