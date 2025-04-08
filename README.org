@@ -1,4 +1,4 @@
-:#+OPTIONS: toc:nil
+#+OPTIONS: toc:nil
 
 * Org Invoice Table
 :PROPERTIES:
