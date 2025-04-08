@@ -75,7 +75,7 @@ You may set or customize the ~org-invoice-invoice-table-time-display~ to either 
 ;; Maintainer: Trevor Richards <trev@trevdev.ca>
 ;; URL: https://codeberg.org/trevdev/org-invoice-table
 ;; Created: 7th September, 2022
-;; Version: 1.0.1
+;; Version: 1.1.0
 ;; License: GPL3
 ;; Package-Requires: ((emacs "26.1"))
 ;;
