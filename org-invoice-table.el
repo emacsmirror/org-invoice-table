@@ -6,7 +6,7 @@
 ;; Maintainer: Trevor Richards <trev@trevdev.ca>
 ;; URL: https://codeberg.org/trevdev/org-invoice-table
 ;; Created: 7th September, 2022
-;; Version: 1.1.1
+;; Version: 1.1.2
 ;; License: GPL3
 ;; Package-Requires: ((emacs "26.1"))
 ;;
@@ -199,12 +199,16 @@ clocktable works."
              (if (= level 1) "|-\n|" "|")
              (org-invoice-table-indent level)
              (concat (org-invoice-table-emph headline (and emph (= level 1))) "|")
-             (if-let (effort (org-invoice-table-get-prop "Effort" props))
-                 (concat (org-invoice-table-emph
-                          (org-duration-from-minutes
-                           (org-duration-to-minutes effort))
-                          (and emph (= level 1)))
-                         "|")
+             (if effort-on
+                 (concat
+                  (if-let ((effort (org-invoice-table-get-prop "Effort" props)))
+                      (org-invoice-table-emph
+                       (org-invoice-table-display-time
+                        (org-duration-to-minutes effort)
+                        (org-invoice-table-hours
+                         (org-duration-to-minutes effort))))
+                    "")
+                  "|")
                "")
              (concat (org-invoice-table-emph
                       (org-invoice-table-display-time mins hours)
@@ -219,10 +223,7 @@ clocktable works."
                         (org-invoice-table-get-prop "Comment" props)))
                  (concat comment "\n")
                "\n"))))
-        (let ((cols-adjust
-               (if (member "Effort" properties)
-                   2
-                 1)))
+        (let ((cols-adjust (if effort-on 2 1)))
           (insert-before-markers
            (concat "|-\n| "
                    (org-invoice-table-emph "Totals" emph)
